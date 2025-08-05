@@ -20,17 +20,74 @@ public class VehicleController : MonoBehaviour
     [Header("Vehicle Engine")]
     public float accelerationForce = 100f;
     public float breakingForce = 200f;
-    private float presentBreakeForce = 0f;
+    private float presentBreakForce = 0f;
     private float presentAcceleration = 0f;
 
     [Header("Vehicle Steering")]
     public float wheelsTorque = 20f;
     private float presentTurnAngle = 0f;
 
+    [Header("Vehicle Secuirty")]
+    public PlayerScript player;
+    private float radius = 5f;
+    private bool isOpened = false;
+
+    [Header("Disable Things")]
+    public GameObject AimCam;
+    public GameObject AimCanvas;
+    public GameObject ThirdPersonCam;
+    public GameObject ThirdPersonCanvas;
+    public GameObject PlayerCharacter;
+
+    [Header("Vehicle Hit Var")]
+    public Camera cam;
+    public float hitRange = 2f;
+    private float giveDamageOf = 100f;
+    public GameObject goreEffect;
+
     private void Update()
     {
-        MoveVehicle();
-        VehicleSteering();
+        if(Vector3.Distance(backLeftWheelTransform.position, player.transform.position) < radius)
+        {
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                isOpened = true;
+                radius = 5000f;
+                //objective complete...
+            }
+            else if (Input.GetKeyDown(KeyCode.G))
+            {
+                player.transform.position = vehicleDoor.transform.position;
+                isOpened = false;
+                radius = 5f;
+            }
+        }
+
+        if(isOpened == true)
+        {
+            ThirdPersonCam.SetActive(false);
+            ThirdPersonCanvas.SetActive(false);
+            AimCam.SetActive(false);
+            AimCanvas.SetActive(false);
+            PlayerCharacter.SetActive(false);
+
+            MoveVehicle();
+            VehicleSteering();
+            ApplyBreaks();
+            HitZombies();
+        }
+        else if(isOpened == false)
+        {
+            ThirdPersonCam.SetActive(true);
+            ThirdPersonCanvas.SetActive(true);
+            AimCam.SetActive(true);
+            AimCanvas.SetActive(true);
+            PlayerCharacter.SetActive(true);
+
+        }
+
+
+       
     }
 
     void MoveVehicle()
@@ -66,5 +123,46 @@ public class VehicleController : MonoBehaviour
 
         WT.position = position;
         WT.rotation = rotation;
+    }
+
+    void ApplyBreaks()
+    {
+        if (Input.GetKey(KeyCode.Space))
+            presentBreakForce = breakingForce;
+        else
+            presentBreakForce = 0f;
+
+        frontRightWheelCollider.brakeTorque = presentBreakForce;
+        frontLeftWheelCollider.brakeTorque = presentBreakForce;
+        backRightWheelCollider.brakeTorque = presentBreakForce;
+        backLeftWheelCollider.brakeTorque = presentBreakForce;
+    }
+
+    void HitZombies()
+    {
+        RaycastHit hitInfo;
+
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hitInfo, hitRange))
+        {
+            Debug.Log(hitInfo.transform.name);
+
+            Zombie1 zombie1 = hitInfo.transform.GetComponent<Zombie1>();
+            Zombie2 zombie2 = hitInfo.transform.GetComponent<Zombie2>();
+
+            if (zombie1 != null)
+            {
+                zombie1.zombieHitDamage(giveDamageOf);
+                zombie1.GetComponent<CapsuleCollider>().enabled = false;
+                GameObject goreEffectGo = Instantiate(goreEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+                Destroy(goreEffectGo, 1f);
+            }
+            else if (zombie2 != null)
+            {
+                zombie2.zombieHitDamage(giveDamageOf);
+                zombie2.GetComponent<CapsuleCollider>().enabled = false;
+                GameObject goreEffectGo = Instantiate(goreEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+                Destroy(goreEffectGo, 1f);
+            }
+        }
     }
 }

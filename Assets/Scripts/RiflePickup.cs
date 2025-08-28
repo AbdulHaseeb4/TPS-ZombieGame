@@ -46,7 +46,15 @@ public class RiflePickup : MonoBehaviour
 
                 //sound
                 //objective completed
-                ObjectivesComplete.occurrence.GetObjectivesDone(true, false, false, false);
+                if (ObjectivesComplete.occurrence != null)
+                {
+                    ObjectivesComplete.occurrence.GetObjectivesDone(true, false, false, false);
+                }
+                else
+                {
+                    Debug.LogWarning("ObjectivesComplete not initialized yet!");
+                }
+
             }
         }
     }

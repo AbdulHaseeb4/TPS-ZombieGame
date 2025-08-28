@@ -44,6 +44,7 @@ public class VehicleController : MonoBehaviour
     public float hitRange = 2f;
     private float giveDamageOf = 100f;
     public GameObject goreEffect;
+    public GameObject DestroyEffect;
 
     private void Update()
     {
@@ -54,7 +55,11 @@ public class VehicleController : MonoBehaviour
                 isOpened = true;
                 radius = 5000f;
                 //objective complete...
-                ObjectivesComplete.occurrence.GetObjectivesDone(true, true, true, false);
+                if (ObjectivesComplete.occurrence != null)
+                {
+                    ObjectivesComplete.occurrence.GetObjectivesDone(true, false, false, false);
+                }
+
             }
             else if (Input.GetKeyDown(KeyCode.G))
             {
@@ -149,6 +154,7 @@ public class VehicleController : MonoBehaviour
 
             Zombie1 zombie1 = hitInfo.transform.GetComponent<Zombie1>();
             Zombie2 zombie2 = hitInfo.transform.GetComponent<Zombie2>();
+            ObjectToHit objectToHit = hitInfo.transform.GetComponent<ObjectToHit>();
 
             if (zombie1 != null)
             {
@@ -163,6 +169,12 @@ public class VehicleController : MonoBehaviour
                 zombie2.GetComponent<CapsuleCollider>().enabled = false;
                 GameObject goreEffectGo = Instantiate(goreEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
                 Destroy(goreEffectGo, 1f);
+            }
+            else if (objectToHit != null)
+            {
+                objectToHit.ObjectHitDamage(giveDamageOf);
+                GameObject WoodGo = Instantiate(DestroyEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+                Destroy(WoodGo, 1f);
             }
         }
     }
